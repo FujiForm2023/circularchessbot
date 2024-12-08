@@ -584,17 +584,273 @@ public class BoardBot : MonoBehaviour
             newPosition.isCastle = this.isCastle;
             return newPosition;
         }
-        public Position(){
-            this.boardArray = new uint[20];
-            this.whiteToMove = true;
-            this.castleAbility = 0;
-            this.halfMove = 0;
-            this.fullMove = 0;
-            this.whiteKingPosition = new Square{rank = 255, file = 255};
-            this.blackKingPosition = new Square{rank = 255, file = 255};
-            this.uniqueHash = 0;
-            this.gameStatus = 4;
-            this.isCastle = false;
+    }
+    public struct Move
+    {
+        public byte rankFrom;
+        public byte fileFrom;
+        public byte rankTo;
+        public byte fileTo;
+        public Square squareFrom {
+            get
+            {
+                return new Square{rank = rankFrom, file = fileFrom};
+            }
+        }
+        public Square squareTo {
+            get
+            {
+                return new Square{rank = rankTo, file = fileTo};
+            }
+        }
+    }
+    public Position currentPosition = new Position();
+    public void Awake()
+    {
+        currentPosition = new Position();
+        zobristHash = new ZobristHashing();
+        currentPosition.boardArray = new uint[20]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        currentPosition.whiteToMove = true;
+        currentPosition.castleAbility = (byte)0b1111;
+        currentPosition.halfMove = 0;
+        currentPosition.fullMove = 1;
+        currentPosition.whiteKingPosition = new Square{rank = 255, file = 255};
+        currentPosition.blackKingPosition = new Square{rank = 255, file = 255};
+        currentPosition.gameStatus = 0;
+        currentPosition.uniqueHash = zobristHash.GenerateHash(currentPosition.boardArray);
+        currentPosition.isCastle = false;
+    }
+    // BoardData Extends
+    public bool rankOutOfBounds(int rank)
+    {
+        return rank < 0 || rank > 7;
+    }
+    public bool rankOutOfBounds(byte rank)
+    {
+        return rank < 0 || rank > 7;
+    }
+    // Method overloading
+    public bool rankInBounds(int rank)
+    {
+        return rank >= 0 && rank <= 7;
+    }
+    public bool rankInBounds(byte rank)
+    {
+        return rank >= 0 && rank <= 7;
+    }
+    public bool isWhite(byte piece)
+    {
+        return (piece & 0b1000) == 0 && isPiece(piece);
+    }
+    public bool isBlack(byte piece)
+    {
+        return (piece & 0b1000) != 0 && isPiece(piece);
+    }
+    public bool isPiece(byte piece)
+    {
+        return (piece & 0b0111) != 0;
+    }
+    public bool isPieceSafeValid(byte piece)
+    {
+        return !(((piece & 0b0111) == 0) || ((piece & 0b0111) == 7));
+    }
+    public bool isBlank(byte piece)
+    {
+        return piece == 0;
+    }
+    public bool isVoid(byte piece)
+    {
+        return piece == 8;
+    }
+    public bool isPawn(byte piece)
+    {
+        return (piece & 0b0111) == 1;
+        // WhitePawn = 0x1, // 0001
+        // BlackPawn = 0x9, // 1001
+    }
+    public bool isKnight(byte piece)
+    {
+        return (piece & 0b0111) == 2;
+        // WhiteKnight = 0x2, // 0010
+        // BlackKnight = 0xA, // 1010
+    }
+    public bool isBishop(byte piece)
+    {
+        return (piece & 0b0111) == 3;
+        // WhiteBishop = 0x3, // 0011
+        // BlackBishop = 0xB, // 1011
+    }
+    public bool isRook(byte piece)
+    {
+        return (piece & 0b0111) == 4;
+        // WhiteRook = 0x4, // 0100
+        // BlackRook = 0xC, // 1100
+    }
+    public bool isQueen(byte piece)
+    {
+        return (piece & 0b0111) == 5;
+        // WhiteQueen = 0x5, // 0101
+        // BlackQueen = 0xD, // 1101
+    }
+    public bool isKing(byte piece)
+    {
+        return (piece & 0b0111) == 6;
+        // WhiteKing = 0x6, // 0110
+        // BlackKing = 0xE // 1110
+    }
+    public bool isMajorPiece(byte piece){
+        return isKnight(piece) || isBishop(piece) || isRook(piece) || isQueen(piece) || isKing(piece);
+    }
+    public bool isMajorNoKingPiece(byte piece){
+        return isKnight(piece) || isBishop(piece) || isRook(piece) || isQueen(piece);
+    }
+    public byte getType(byte piece)
+    {
+        return (byte)(piece & 0b0111);
+    }
+    // Method overloading
+    public byte fileOverload(byte file)
+    {
+        return (byte)((file+40) % 20);
+    }
+    public byte fileOverload(int file)
+    {
+        return (byte)((file+40) % 20);
+    }
+    public bool isFriendly(byte piece1, byte piece2)
+    {
+        return (isWhite(piece1) == isWhite(piece2)) && isPiece(piece2);
+    }
+    public bool isEnemy(byte piece1, byte piece2)
+    {
+        return (isWhite(piece1) == isBlack(piece2)) && isPiece(piece2);
+    }
+    public bool isAttackable(byte piece1, byte piece2)
+    {
+        return isBlank(piece2) || isEnemy(piece1, piece2);
+    }
+    public bool isSameWhoToMove(Position position, byte piece){
+        return !(position.whiteToMove ^ isWhite(piece));
+    }
+    public bool isNotSameWhoToMove(Position position, byte piece){
+        return position.whiteToMove ^ isWhite(piece);
+    }
+    public byte getPiece(Position position, Square square)
+    {
+        return (byte)(position.boardArray[square.file] >> (square.rank * 4) & 0xf);
+    }
+    public byte getPiece(Position position, byte rank, byte file)
+    {
+        return (byte)(position.boardArray[fileOverload(file)] >> (rank * 4) & 0xf);
+    }
+    public byte getPiece(Position position, byte rank, int file)
+    {
+        return (byte)(position.boardArray[fileOverload(file)] >> (rank * 4) & 0xf);
+    }
+    public byte getPiece(Position position, int rank, byte file)
+    {
+        return (byte)(position.boardArray[fileOverload(file)] >> (rank * 4) & 0xf);
+    }
+    public byte getPiece(Position position, int rank, int file)
+    {
+        return (byte)(position.boardArray[fileOverload(file)] >> (rank * 4) & 0xf);
+    }
+    public byte getPiece(Square square)
+    {
+        return getPiece(currentPosition, square);
+    }
+    public byte getPiece(byte rank, byte file)
+    {
+        return getPiece(currentPosition, rank, file);
+    }
+    public byte getPiece(byte rank, int file)
+    {
+        return getPiece(currentPosition, rank, file);
+    }
+    public byte getPiece(int rank, byte file)
+    {
+        return getPiece(currentPosition, rank, file);
+    }
+    public byte getPiece(int rank, int file)
+    {
+        return getPiece(currentPosition, rank, file);
+    }
+    public Position setPiece(Position position, Square square, byte piece)
+    {
+        position.boardArray[square.file] &= (uint)~(0xf << (square.rank * 4));
+        position.boardArray[square.file] |= (uint)(piece << (square.rank * 4));
+        return position;
+    }
+    public Position setPiece(Position position, byte rank, byte file, byte piece)
+    {
+        Position newPosition = position;
+        newPosition.boardArray[file] &= (uint)~(0xf << (rank * 4));
+        newPosition.boardArray[file] |= (uint)(piece << (rank * 4));
+        return newPosition;
+    }
+    public Position setPiece(Position position, byte rank, int file, byte piece)
+    {
+        Position newPosition = position.deepClone();
+        newPosition.boardArray[file] &= (uint)~(0xf << (rank * 4));
+        newPosition.boardArray[file] |= (uint)(piece << (rank * 4));
+        return newPosition;
+    }
+    public Position setPiece(Position position, int rank, byte file, byte piece)
+    {
+        Position newPosition = position;
+        newPosition.boardArray[file] &= (uint)~(0xf << (rank * 4));
+        newPosition.boardArray[file] |= (uint)(piece << (rank * 4));
+        return newPosition;
+    }
+    public Position setPiece(Position position, int rank, int file, byte piece)
+    {
+        Position newPosition = position.deepClone();
+        newPosition.boardArray[file] &= (uint)~(0xf << (rank * 4));
+        newPosition.boardArray[file] |= (uint)(piece << (rank * 4));
+        return newPosition;
+    }
+    public Position softMovePiece(Position position, Move move){
+        Position newPosition = position.deepClone();
+        byte piece = getPiece(position, move.squareFrom);
+        newPosition = setPiece(newPosition, move.squareTo, piece);
+        newPosition = setPiece(newPosition, move.squareFrom, 0);
+        if (isKing(piece)){
+            if (isWhite(piece)){
+                newPosition.whiteKingPosition = move.squareTo;
+            } else {
+                newPosition.blackKingPosition = move.squareTo;
+            }
+        }
+        newPosition.nextTurn();
+        return newPosition;
+    }
+    public void softMovePiece(Move move){
+        currentPosition = softMovePiece(currentPosition, move);
+    }
+    public Position softMovePiece(Position position, Square squareFrom, Square squareTo){
+        return softMovePiece(position, new Move{rankFrom = squareFrom.rank, fileFrom = squareFrom.file, rankTo = squareTo.rank, fileTo = squareTo.file});
+    }
+    public void softMovePiece(Square squareFrom, Square squareTo){
+        currentPosition = softMovePiece(currentPosition, squareFrom, squareTo);
+    }
+    public Position softMovePiece(Position position, byte rankFrom, byte fileFrom, byte rankTo, byte fileTo){
+        return softMovePiece(position, new Move{rankFrom = rankFrom, fileFrom = fileFrom, rankTo = rankTo, fileTo = fileTo});
+    }
+    public void softMovePiece(byte rankFrom, byte fileFrom, byte rankTo, byte fileTo){
+        currentPosition = softMovePiece(currentPosition, rankFrom, fileFrom, rankTo, fileTo);
+    }
+    public Position movePiece(Position position, Move move) 
+    {
+        Position newPosition = position.deepClone();
+        byte piece = getPiece(position, move.squareFrom);
+        byte capturedPiece = getPiece(position, move.squareTo);
+        bool captured = isPiece(capturedPiece);
+        newPosition = setPiece(newPosition, move.squareTo, piece);
+        newPosition = setPiece(newPosition, move.squareFrom, 0);
+
+        if (newPosition.isCastle)
+        {
+            newPosition.isCastle = false;
         }
 
         // Position methods

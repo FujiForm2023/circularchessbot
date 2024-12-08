@@ -1744,7 +1744,902 @@ public class BoardBot : MonoBehaviour
             {
                 if (k)
                 {
-                    if (isBlank(getPiece(7, 11)) && isBlank(getPiece(7, 12)) && !isCheckAfterMove(rank, file, rank, 11) && !isCheckAfterMove(rank, file, rank, 12))
+                    newPosition = setPiece(newPosition, move.rankFrom, 10, 0);
+                    newPosition = setPiece(newPosition, move.rankFrom, 12, (byte)BoardPiece.BlackRook);
+                    newPosition.halfMove = 0;
+                    newPosition.kq = false;
+                    newPosition.isCastle = true;
+                }
+                else if (move.fileTo == 15 && newPosition.q)
+                {
+                    newPosition = setPiece(newPosition, move.rankFrom, 17, 0);
+                    newPosition = setPiece(newPosition, move.rankFrom, 14, (byte)BoardPiece.BlackRook);
+                    newPosition.halfMove = 0;
+                    newPosition.kq = false;
+                    newPosition.isCastle = true;
+                }
+                newPosition.blackKingPosition = move.squareTo;
+            }
+        }
+
+        // Castling Check
+        if (!isWhite(getPiece(newPosition, 7, 4)) || !isKing(getPiece(newPosition, 7, 4)))
+        {
+            newPosition.KQ = false;
+        }
+        if (!isWhite(getPiece(newPosition, 7, 0)) || !isRook(getPiece(newPosition, 7, 0)))
+        {
+            newPosition.castleAbility &= 0b0111;
+        }
+        if (!isWhite(getPiece(newPosition, 7, 7)) || !isRook(getPiece(newPosition, 7, 7)))
+        {
+            newPosition.castleAbility &= 0b1011;
+        }
+        
+        if (!isBlack(getPiece(newPosition, 7, 13)) || !isKing(getPiece(newPosition, 7, 13)))
+        {
+            newPosition.kq = false;
+        }
+        if (!isBlack(getPiece(newPosition, 7, 10)) || !isRook(getPiece(newPosition, 7, 10)))
+        {
+            newPosition.castleAbility &= 0b1101;
+        }
+        if (!isBlack(getPiece(newPosition, 7, 17)) || !isRook(getPiece(newPosition, 7, 17)))
+        {
+            newPosition.castleAbility &= 0b1110;
+        }
+
+        if (captured || isPawn(piece))
+        {
+            newPosition.halfMove = 0;
+        }
+
+        if (newPosition.gameStatus == 0)
+        {
+            newPosition = updateGameStatus(newPosition);
+        }
+
+        newPosition.nextTurn();
+
+        return newPosition;
+    }
+    public void movePiece(Move move)
+    {
+        currentPosition = movePiece(currentPosition, move);
+    }
+    public Position movePiece(Position position, Square squareFrom, Square squareTo)
+    {
+        return movePiece(position, new Move{rankFrom = squareFrom.rank, fileFrom = squareFrom.file, rankTo = squareTo.rank, fileTo = squareTo.file});
+    }
+    public void movePiece(Square squareFrom, Square squareTo)
+    {
+        currentPosition = movePiece(currentPosition, squareFrom, squareTo);
+    }
+    public Position movePiece(Position position, byte rankFrom, byte fileFrom, byte rankTo, byte fileTo)
+    {
+        return movePiece(position, new Move{rankFrom = rankFrom, fileFrom = fileFrom, rankTo = rankTo, fileTo = fileTo});
+    }
+    public void movePiece(byte rankFrom, byte fileFrom, byte rankTo, byte fileTo)
+    {
+        currentPosition = movePiece(currentPosition, rankFrom, fileFrom, rankTo, fileTo);
+    }
+    public Move[] getMovement(Position position, byte rank, byte file)
+    {
+        byte piece = getPiece(position, rank, file);
+        byte pieceType = getType(piece);
+        List<Move> moves;
+        switch (pieceType) {
+            case 0x1:
+                moves = movementPawn(position, rank, file, piece);
+                break;
+            case 0x2:
+                moves = movementKnight(position, rank, file, piece);
+                break;
+            case 0x3:
+                moves = movementBishop(position, rank, file, piece);
+                break;
+            case 0x4:
+                moves = movementRook(position, rank, file, piece);
+                break;
+            case 0x5:
+                moves = movementQueen(position, rank, file, piece);
+                break;
+            case 0x6:
+                moves = movementKing(position, rank, file, piece);
+                break;
+            default:
+                moves = new List<Move>();
+                break;
+        }
+
+        // If draw?
+        if (moves.Count == 0)
+        {
+            return moves.ToArray();
+        }
+        // If illegal move?
+        moves.RemoveAll(eachMove => isCheckAfterMove(eachMove));
+
+        return moves.ToArray();
+    }
+    public Move[] getMovement(Position position, Square square)
+    {
+        byte piece = getPiece(position, square);
+        byte pieceType = getType(piece);
+        List<Move> moves;
+        switch (pieceType) {
+            case 0x1:
+                moves = movementPawn(position, square, piece);
+                break;
+            case 0x2:
+                moves = movementKnight(position, square, piece);
+                break;
+            case 0x3:
+                moves = movementBishop(position, square, piece);
+                break;
+            case 0x4:
+                moves = movementRook(position, square, piece);
+                break;
+            case 0x5:
+                moves = movementQueen(position, square, piece);
+                break;
+            case 0x6:
+                moves = movementKing(position, square, piece);
+                break;
+            default:
+                moves = new List<Move>();
+                break;
+        }
+
+        // If draw?
+        if (moves.Count == 0)
+        {
+            return moves.ToArray();
+        }
+
+        // If illegal move?
+        moves.RemoveAll(eachMove => isCheckAfterMove(eachMove));
+
+        return moves.ToArray();
+    }
+    public Move[] getSoftMovement(Position position, byte rank, byte file){
+        byte piece = getPiece(position, rank, file);
+        byte pieceType = getType(piece);
+        List<Move> moves;
+        switch (pieceType) {
+            case 0x1:
+                moves = movementPawn(position, rank, file, piece);
+                break;
+            case 0x2:
+                moves = movementKnight(position, rank, file, piece);
+                break;
+            case 0x3:
+                moves = movementBishop(position, rank, file, piece);
+                break;
+            case 0x4:
+                moves = movementRook(position, rank, file, piece);
+                break;
+            case 0x5:
+                moves = movementQueen(position, rank, file, piece);
+                break;
+            case 0x6:
+                moves = movementKing(position, rank, file, piece);
+                break;
+            default:
+                moves = new List<Move>();
+                break;
+        }
+        return moves.ToArray();
+    }
+    public Move[] getSoftMovement(Position position, Square square){
+        byte piece = getPiece(position, square);
+        byte pieceType = getType(piece);
+        List<Move> moves;
+        switch (pieceType) {
+            case 0x1:
+                moves = movementPawn(position, square, piece);
+                break;
+            case 0x2:
+                moves = movementKnight(position, square, piece);
+                break;
+            case 0x3:
+                moves = movementBishop(position, square, piece);
+                break;
+            case 0x4:
+                moves = movementRook(position, square, piece);
+                break;
+            case 0x5:
+                moves = movementQueen(position, square, piece);
+                break;
+            case 0x6:
+                moves = movementKing(position, square, piece);
+                break;
+            default:
+                moves = new List<Move>();
+                break;
+        }
+        return moves.ToArray();
+    }
+    public List<Move> movementPawn(Position position, byte rank, byte file, byte piece)
+    {
+        List<Move> moves = new List<Move>();
+        if (isBlank(getPiece(position, rank-1, file)))
+        {   
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = file});
+            if (rank == 6 && isBlank(getPiece(position, rank-2, file)))
+            {
+                moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-2), fileTo = file});
+            }
+        }
+        if (rankInBounds(rank-1) && isEnemy(piece, getPiece(position, rank-1, file+1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file+1)});
+        }
+        if (rankInBounds(rank-1) && isEnemy(piece, getPiece(position, rank-1, file-1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file-1)});
+        }
+        return moves;
+    }
+    public List<Move> movementPawn(Position position, Square square, byte piece)
+    {
+        return movementPawn(position, square.rank, square.file, piece);
+    }
+    public List<Move> movementKnight(Position position, byte rank, byte file, byte piece)
+    {
+        List<Move> moves = new List<Move>();
+        if (rankInBounds(rank+1) && isAttackable(piece, getPiece(position, rank+1, file+2)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+1), fileTo = fileOverload(file+2)});
+        }
+        if (rankInBounds(rank+1) && isAttackable(piece, getPiece(position, rank+1, file-2)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+1), fileTo = fileOverload(file-2)});
+        }
+        if (rankInBounds(rank-1) && isAttackable(piece, getPiece(position, rank-1, file+2)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file+2)});
+        }
+        if (rankInBounds(rank-1) && isAttackable(piece, getPiece(position, rank-1, file-2)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file-2)});
+        }
+        if (rankInBounds(rank+2) && isAttackable(piece, getPiece(position, rank+2, file+1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+2), fileTo = fileOverload(file+1)});
+        }
+        if (rankInBounds(rank+2) && isAttackable(piece, getPiece(position, rank+2, file-1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+2), fileTo = fileOverload(file-1)});
+        }
+        if (rankInBounds(rank-2) && isAttackable(piece, getPiece(position, rank-2, file+1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-2), fileTo = fileOverload(file+1)});
+        }
+        if (rankInBounds(rank-2) && isAttackable(piece, getPiece(position, rank-2, file-1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-2), fileTo = fileOverload(file-1)});
+        }
+        return moves;
+    }
+    public List<Move> movementKnight(Position position, Square square, byte piece)
+    {
+        return movementKnight(position, square.rank, square.file, piece);
+    }
+    public List<Move> movementBishop(Position position, byte rank, byte file, byte piece)
+    {
+        List<Move> moves = new List<Move>();
+
+        byte i = 1;
+        while (rankInBounds(rank+i) && isAttackable(piece, getPiece(position, rank+i, file+i)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank+i, file+i)))
+            {
+                if (isEnemy(piece, getPiece(position, rank+i, file+i)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+i), fileTo = fileOverload(file+i)});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+i), fileTo = fileOverload(file+i)});
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank-i) && isAttackable(piece, getPiece(position, rank-i, file-i)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank-i, file-i)))
+            {
+                if (isEnemy(piece, getPiece(position, rank-i, file-i)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-i), fileTo = fileOverload(file-i)});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-i), fileTo = fileOverload(file-i)});
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank+i) && isAttackable(piece, getPiece(position, rank+i, file-i)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank+i, file-i)))
+            {
+                if (isEnemy(piece, getPiece(position, rank+i, file-i)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+i), fileTo = fileOverload(file-i)});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+i), fileTo = fileOverload(file-i)});
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank-i) && isAttackable(piece, getPiece(position, rank-i, file+i)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank-i, file+i)))
+            {
+                if (isEnemy(piece, getPiece(position, rank-i, file+i)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-i), fileTo = fileOverload(file+i)});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-i), fileTo = fileOverload(file+i)});
+            ++i;
+        }
+        
+        return moves;
+    }
+    public List<Move> movementBishop(Position position, Square square, byte piece)
+    {
+        return movementBishop(position, square.rank, square.file, piece);
+    }
+    public List<Move> movementRook(Position position, byte rank, byte file, byte piece)
+    {
+        List<Move> moves = new List<Move>();
+
+        byte i = 1;
+        while (rankInBounds(rank+i) && isAttackable(piece, getPiece(position, rank+i, file)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank+i, file)))
+            {
+                if (isEnemy(piece, getPiece(position, rank+i, file)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+i), fileTo = file});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+i), fileTo = file});
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank-i) && isAttackable(piece, getPiece(position, rank-i, file)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank-i, file)))
+            {
+                if (isEnemy(piece, getPiece(position, rank-i, file)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-i), fileTo = file});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-i), fileTo = file});
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank) && isAttackable(piece, getPiece(position, rank, file+i)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank, file+i)))
+            {
+                if (isEnemy(piece, getPiece(position, rank, file+i)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = rank, fileTo = fileOverload(file+i)});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = rank, fileTo = fileOverload(file+i)});
+            ++i;
+            if (i >= 20){
+                return moves;
+            }
+        }
+
+        byte j = (byte)(19 - i);
+        i = 1;
+        while (rankInBounds(rank) && isAttackable(piece, getPiece(position, rank, file-i)))
+        {
+            if (isPieceSafeValid(getPiece(position, rank, file-i)))
+            {
+                if (isEnemy(piece, getPiece(position, rank, file-i)))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = rank, fileTo = fileOverload(file-i)});
+                }
+                break;
+            }
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = rank, fileTo = fileOverload(file-i)});
+            ++i;
+            if (i == j){
+                return moves;
+            } else if (i >= 20){
+                return moves;
+            }
+        }
+
+        return moves;
+    }
+    public List<Move> movementRook(Position position, Square square, byte piece)
+    {
+        return movementRook(position, square.rank, square.file, piece);
+    }
+    public List<Move> movementQueen(Position position, byte rank, byte file, byte piece)
+    {
+        List<Move> moves = new List<Move>();
+        moves.AddRange(movementBishop(position, rank, file, piece));
+        moves.AddRange(movementRook(position, rank, file, piece));
+        return moves;
+    }
+    public List<Move> movementQueen(Position position, Square square, byte piece)
+    {
+        return movementQueen(position, square.rank, square.file, piece);
+    }
+    public List<Move> movementKing(Position position, byte rank, byte file, byte piece)
+    {
+        List<Move> moves = new List<Move>();
+        if (rankInBounds(rank+1) && isAttackable(piece, getPiece(position, rank+1, file)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+1), fileTo = file});
+        }
+        if (rankInBounds(rank-1) && isAttackable(piece, getPiece(position, rank-1, file)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = file});
+        }
+        if (isAttackable(piece, getPiece(position, rank, file+1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = rank, fileTo = fileOverload(file+1)});
+        }
+        if (isAttackable(piece, getPiece(position, rank, file-1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = rank, fileTo = fileOverload(file-1)});
+        }
+        if (rankInBounds(rank+1) && isAttackable(piece, getPiece(position, rank+1, file+1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+1), fileTo = fileOverload(file+1)});
+        }
+        if (rankInBounds(rank+1) && isAttackable(piece, getPiece(position, rank+1, file-1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank+1), fileTo = fileOverload(file-1)});
+        }
+        if (rankInBounds(rank-1) && isAttackable(piece, getPiece(position, rank-1, file+1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file+1)});
+        }
+        if (rankInBounds(rank-1) && isAttackable(piece, getPiece(position, rank-1, file-1)))
+        {
+            moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file-1)});
+        }
+
+        // Castling
+        if (isWhite(piece))
+        {
+            if (position.K)
+            {
+                if (isBlank(getPiece(position, 7, 5)) && isBlank(getPiece(position, 7, 6)) && !isCheckAfterMove(position, rank, file, rank, 5) && !isCheckAfterMove(position, rank, file, rank, 6))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = 7, fileTo = 6});
+                }
+            }
+            if (position.Q)
+            {
+                if (isBlank(getPiece(position, 7, 1)) && isBlank(getPiece(position, 7, 2)) && isBlank(getPiece(position, 7, 3)) && !isCheckAfterMove(position, rank, file, rank, 3) && !isCheckAfterMove(position, rank, file, rank, 2))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = 7, fileTo = 2});
+                }
+            }
+        }
+        else
+        {
+            if (position.k)
+            {
+                if (isBlank(getPiece(position, 7, 11)) && isBlank(getPiece(position, 7, 12)) && !isCheckAfterMove(position, rank, file, rank, 11) && !isCheckAfterMove(position, rank, file, rank, 12))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = 7, fileTo = 11});
+                }
+            }
+            if (position.q)
+            {
+                if (isBlank(getPiece(position, 7, 14)) && isBlank(getPiece(position, 7, 15)) && isBlank(getPiece(position, 7, 16)) && !isCheckAfterMove(position, rank, file, rank, 16) && !isCheckAfterMove(position, rank, file, rank, 15))
+                {
+                    moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = 7, fileTo = 15});
+                }
+            }
+        }
+
+        return moves;
+    }
+    public List<Move> movementKing(Position position, Square square, byte piece)
+    {
+        return movementKing(position, square.rank, square.file, piece);
+    }
+    public Position pawnPromotion(Position position, Move move, byte promotePiece)
+    {
+        Position newPosition = position.deepClone();
+        newPosition = setPiece(newPosition, move.rankTo, move.fileTo, promotePiece);
+        newPosition = setPiece(newPosition, move.rankFrom, move.fileFrom, 0);
+        if (newPosition.gameStatus == 0){
+            newPosition = updateGameStatus(newPosition);
+        }
+        newPosition.nextTurn();
+        return newPosition;
+    }
+    public void pawnPromotion(Move move, byte promotePiece)
+    {
+        currentPosition = pawnPromotion(currentPosition, move, promotePiece);
+    }
+    public Position pawnPromotion(Position position, byte rankFrom, byte fileFrom, byte rankTo, byte fileTo, byte promotePiece)
+    {
+        return pawnPromotion(position, new Move{rankFrom = rankFrom, fileFrom = fileFrom, rankTo = rankTo, fileTo = fileTo}, promotePiece);
+    }
+    public void pawnPromotion(byte rankFrom, byte fileFrom, byte rankTo, byte fileTo, byte promotePiece)
+    {
+        currentPosition = pawnPromotion(currentPosition, rankFrom, fileFrom, rankTo, fileTo, promotePiece);
+    }
+    public Position pawnPromotion(Position position, Square squareFrom, Square squareTo, byte promotePiece)
+    {
+        return pawnPromotion(position, squareFrom.rank, squareFrom.file, squareTo.rank, squareTo.file, promotePiece);
+    }
+    public void pawnPromotion(Square squareFrom, Square squareTo, byte promotePiece)
+    {
+        currentPosition = pawnPromotion(currentPosition, squareFrom, squareTo, promotePiece);
+    }
+    public bool isCheckAfterMove(Position position, Move move)
+    {
+        Position newPosition = softMovePiece(position, move);
+        return isCheck(newPosition);
+    }
+    public bool isCheckAfterMove(Move move)
+    {
+        return isCheckAfterMove(currentPosition, move);
+    }
+    public bool isCheckAfterMove(Position position, Square sqaureFrom, Square squareTo)
+    {
+        Move move = new Move{rankFrom = sqaureFrom.rank, fileFrom = sqaureFrom.file, rankTo = squareTo.rank, fileTo = squareTo.file};
+        return isCheckAfterMove(position, move);
+    }
+    public bool isCheckAfterMove(Square sqaureFrom, Square squareTo)
+    {
+        Move move = new Move{rankFrom = sqaureFrom.rank, fileFrom = sqaureFrom.file, rankTo = squareTo.rank, fileTo = squareTo.file};
+        return isCheckAfterMove(currentPosition, move);
+    }
+    public bool isCheckAfterMove(Position position, byte rankFrom, byte fileFrom, byte rankTo, byte fileTo)
+    {
+        Move move = new Move{rankFrom = rankFrom, fileFrom = fileFrom, rankTo = rankTo, fileTo = fileTo};
+        return isCheckAfterMove(position, move);
+    }
+    public bool isCheckAfterMove(byte rankFrom, byte fileFrom, byte rankTo, byte fileTo)
+    {
+        Move move = new Move{rankFrom = rankFrom, fileFrom = fileFrom, rankTo = rankTo, fileTo = fileTo};
+        return isCheckAfterMove(currentPosition, move);
+    }
+    public bool isCheck(Position position)
+    {
+        Square kingPosition = position.whiteToMove ? position.blackKingPosition : position.whiteKingPosition;
+        byte rank = kingPosition.rank;
+        byte file = kingPosition.file;
+        byte piece = position.whiteToMove ? (byte)BoardPiece.BlackKing : (byte)BoardPiece.WhiteKing;
+
+        // Knight
+        if (rankInBounds(rank+1) && isEnemy(piece, getPiece(position, rank+1, file+2)) && isKnight(getPiece(position, rank+1, file+2)))
+        {
+            return true;
+        }
+        if (rankInBounds(rank+1) && isEnemy(piece, getPiece(position, rank+1, file-2)) && isKnight(getPiece(position, rank+1, file-2)))
+        {
+            return true;
+        }
+        if (rankInBounds(rank-1) && isEnemy(piece, getPiece(position, rank-1, file+2)) && isKnight(getPiece(position, rank-1, file+2)))
+        {
+            return true;
+        }
+        if (rankInBounds(rank-1) && isEnemy(piece, getPiece(position, rank-1, file-2)) && isKnight(getPiece(position, rank-1, file-2)))
+        {
+            return true;
+        }
+        if (rankInBounds(rank+2) && isEnemy(piece, getPiece(position, rank+2, file+1)) && isKnight(getPiece(position, rank+2, file+1)))
+        {
+            return true;
+        }
+        if (rankInBounds(rank+2) && isEnemy(piece, getPiece(position, rank+2, file-1)) && isKnight(getPiece(position, rank+2, file-1)))
+        {
+            return true;
+        }
+        if (rankInBounds(rank-2) && isEnemy(piece, getPiece(position, rank-2, file+1)) && isKnight(getPiece(position, rank-2, file+1)))
+        {
+            return true;
+        }
+        if (rankInBounds(rank-2) && isEnemy(piece, getPiece(position, rank-2, file-1)) && isKnight(getPiece(position, rank-2, file-1)))
+        {
+            return true;
+        }
+        
+        // Bishop
+        byte i = 1;
+        while (rankInBounds(rank+i) && isAttackable(piece, getPiece(position, rank+i, file+i)))
+        {
+            if (isEnemy(piece, getPiece(position, rank+i, file+i)))
+            {
+                if (isBishop(getPiece(position, rank+i, file+i)) || isQueen(getPiece(position, rank+i, file+i)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank-i) && isAttackable(piece, getPiece(position, rank-i, file-i)))
+        {
+            if (isEnemy(piece, getPiece(position, rank-i, file-i)))
+            {
+                if (isBishop(getPiece(position, rank-i, file-i)) || isQueen(getPiece(position, rank-i, file-i)) || isPawn(getPiece(position, rank-1, file-1)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank+i) && isAttackable(piece, getPiece(position, rank+i, file-i)))
+        {
+            if (isEnemy(piece, getPiece(position, rank+i, file-i)))
+            {
+                if (isBishop(getPiece(position, rank+i, file-i)) || isQueen(getPiece(position, rank+i, file-i)) || isPawn(getPiece(position, rank+i, file-i)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank-i) && isAttackable(piece, getPiece(position, rank-i, file+i)))
+        {
+            if (isEnemy(piece, getPiece(position, rank-i, file+i)))
+            {
+                if (isBishop(getPiece(position, rank-i, file+i)) || isQueen(getPiece(position, rank-i, file+i)) || isPawn(getPiece(position, rank-1, file+1)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+        }
+
+        // King
+        if (rankInBounds(rank+1) && isEnemy(piece, getPiece(position, rank+1, file)))
+        {
+            if (isKing(getPiece(position, rank+1, file)))
+            {
+                return true;
+            }
+        }
+        if (rankInBounds(rank+1) && isEnemy(piece, getPiece(position, rank+1, file+1)))
+        {
+            if (isKing(getPiece(position, rank+1, file+1)))
+            {
+                return true;
+            }
+        }
+        if (rankInBounds(rank+1) && isEnemy(piece, getPiece(position, rank+1, file-1)))
+        {
+            if (isKing(getPiece(position, rank+1, file-1)))
+            {
+                return true;
+            }
+        }
+        if (rankInBounds(rank-1) && isEnemy(piece, getPiece(position, rank-1, file)))
+        {
+            if (isKing(getPiece(position, rank-1, file)))
+            {
+                return true;
+            }
+        }
+        if (rankInBounds(rank-1) && isEnemy(piece, getPiece(position, rank-1, file+1)))
+        {
+            if (isKing(getPiece(position, rank-1, file+1)))
+            {
+                return true;
+            }
+        }
+        if (rankInBounds(rank-1) && isEnemy(piece, getPiece(position, rank-1, file-1)))
+        {
+            if (isKing(getPiece(position, rank-1, file-1)))
+            {
+                return true;
+            }
+        }
+        if (rankInBounds(rank) && isEnemy(piece, getPiece(position, rank, file+1)))
+        {
+            if (isKing(getPiece(position, rank, file+1)))
+            {
+                return true;
+            }
+        }
+        if (rankInBounds(rank) && isEnemy(piece, getPiece(position, rank, file-1)))
+        {
+            if (isKing(getPiece(position, rank, file-1)))
+            {
+                return true;
+            }
+        }
+
+        // Rook
+        i = 1;
+        while (rankInBounds(rank+i) && isAttackable(piece, getPiece(position, rank+i,file)))
+        {
+            if (isEnemy(piece, getPiece(position, rank+i, file)))
+            {
+                if (isRook(getPiece(position, rank+i, file)) || isQueen(getPiece(position, rank+i, file)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+        }
+
+        i = 1;
+        while (rankInBounds(rank-i) && isAttackable(piece, getPiece(position, rank-i,file)))
+        {
+            if (isEnemy(piece, getPiece(position, rank-i, file)))
+            {
+                if (isRook(getPiece(position, rank-i, file)) || isQueen(getPiece(position, rank-i, file)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+        }
+
+        i = 1;
+        while (isAttackable(piece, getPiece(position, rank,file+i)))
+        {
+            if (isEnemy(piece, getPiece(position, rank, file+i)))
+            {
+                if (isRook(getPiece(position, rank, file+i)) || isQueen(getPiece(position, rank, file+i)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+
+            if (i >= 20){
+                return false;
+            }
+        }
+
+        byte j = (byte)(19-i);
+        i = 1;
+        while (isAttackable(piece, getPiece(position, rank,file-i)))
+        {
+            if (isEnemy(piece, getPiece(position, rank, file-i)))
+            {
+                if (isRook(getPiece(position, rank, file-i)) || isQueen(getPiece(position, rank, file-i)))
+                {
+                    return true;
+                } else {
+                    break;
+                }
+            }
+            ++i;
+
+            if (i == j){
+                return false;
+            } else if (i >= 20){
+                return false;
+            }
+        }
+
+        return false;
+    }
+    public bool isCheck()
+    {
+        return isCheck(currentPosition);
+    }
+    public bool isCheckMate(Position position)
+    {
+        if (!isCheck(position))
+        {
+            return false;
+        }
+        return isHaveNoMove(position);
+    }
+    public bool isCheckMate()
+    {
+        return isCheckMate(currentPosition);
+    }
+    public bool isStaleMate(Position position)
+    {
+        if (isCheck(position))
+        {
+            return false;
+        }
+
+        if (zobristHash.CheckForRepetition() || (position.halfMove == 100))
+        {
+            return true;
+        }
+
+        return isHaveNoMove(position);
+    }
+    public bool isStaleMate()
+    {
+        return isStaleMate(currentPosition);
+    }
+    public bool isHaveNoMove(Position position)
+    {
+        Position newPosition = position.deepClone();
+        newPosition.whiteToMove = !newPosition.whiteToMove;
+        return getAllMoves(newPosition).Count == 0;
+    }
+    public bool isHaveNoMove()
+    {
+        return isHaveNoMove(currentPosition);
+    }
+    public Position updateGameStatus(Position position)
+    {
+        if (isCheckMate(position))
+        {
+            position.gameStatus = position.whiteToMove ? (byte)GameStatus.WhiteWin : (byte)GameStatus.BlackWin;
+        }
+        else if (isStaleMate(position))
+        {
+            position.gameStatus = (byte)GameStatus.Draw;
+        } else {
+            position.gameStatus = (byte)GameStatus.Ongoing;
+        }
+        return position;
+    }
+    public Position updateGameStatus()
+    {
+        return updateGameStatus(currentPosition);
+    }
+    public bool isDrawByFiftyMoveRule(Position position)
+    {
+        return position.halfMove >= 100;
+    }
+    public bool isDrawByFiftyMoveRule()
+    {
+        return isDrawByFiftyMoveRule(currentPosition);
+    }
+    public List<Move> getAllMoves(Position position)
+    {
+        byte piece = position.whiteToMove ? (byte)BoardPiece.WhiteKing : (byte)BoardPiece.BlackKing;
+        List<Move> moves = new List<Move>();
+        for (byte rank = 0; rank < 8; ++rank)
+        {
+            for (byte file = 0; file < 20; ++file)
+            {
+                if (isFriendly(getPiece(position, rank, file), piece))
+                {
+                    Move[] move = getSoftMovement(position, rank, file);
+                    foreach (Move eachMove in move)
                     {
                         moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = 7, fileTo = 11});
                     }

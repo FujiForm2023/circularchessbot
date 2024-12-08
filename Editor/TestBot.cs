@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -5,8 +7,16 @@ using UnityEngine;
 [CustomEditor(typeof(mainBot))]
 public class TestBot : Editor
 {
-    public struct A{
-        public int[] abc;
+    struct PointStruct {
+        public int X;
+        public int Y;
+
+    }
+
+    class PointClass {
+        public int X;
+        public int Y;
+
     }
     // public int searchDepthTest = 4;
     public override void OnInspectorGUI()
@@ -15,29 +25,31 @@ public class TestBot : Editor
         base.OnInspectorGUI();
         if (GUILayout.Button("Perft"))
         {
-            A a = new A();
-            a.abc = new int[4];
-            a.abc[0] = 0;
-            a.abc[1] = 1;
-            a.abc[2] = 2;
-            a.abc[3] = 3;
 
-            Debug.Log("" + a.abc[0] + " " + a.abc[1] + " " + a.abc[2] + " " + a.abc[3]);
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            PointStruct pointStruct = default;
+            for (int i = 0; i < 100_000_000; i++) {
+                pointStruct = new PointStruct();
+                pointStruct.X = i;
+                pointStruct.Y = i + 1;
+            }
 
-            A b = changeSomething(a);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("Struct time: " + stopwatch.ElapsedMilliseconds + "ms");
+            stopwatch = Stopwatch.StartNew();
+            for (int i = 0; i < 100_000_000; i++) {
+                PointClass pointClass = new PointClass();
+                pointClass.X = i;
+                pointClass.Y = i + 1;
+            }
 
-            Debug.Log("" + b.abc[0] + " " + b.abc[1] + " " + b.abc[2] + " " + b.abc[3]);
-            Debug.Log("" + a.abc[0] + " " + a.abc[1] + " " + a.abc[2] + " " + a.abc[3]);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("Class time: " + stopwatch.ElapsedMilliseconds + "ms");
             // Debug.Log("Perft");
             // float startTime = Time.realtimeSinceStartup;
             // meinBot.SearchMoves(meinBot.boardBot.currentPosition, searchDepthTest, 0);
             // float endTime = Time.realtimeSinceStartup;
             // Debug.Log("Perft time: " + (endTime - startTime));
         }
-    }
-
-    public A changeSomething(A a){
-        a.abc[0] = 4;
-        return a;
     }
 }

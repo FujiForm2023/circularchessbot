@@ -32,7 +32,7 @@ public class BoardVisual : MonoBehaviour
     void Start()
     {
         boardBot = GetComponent<BoardBot>();
-        boardBot.currentPosition.CircularChessLoader("VVVVVVVV/8/8/2K2Nr1/1QR3r1/5k2/5b2/4r3/8/q1B5/6N1/BbN1n3/8/3B1Nbn/nB1b1B2/3n1Q2/b2n4/8/8/VVVVVVVV w - 0 1");
+        boardBot.CircularChessLoader("VVVVVVVV/8/8/2K2Nr1/1QR3r1/5k2/5b2/4r3/8/q1B5/6N1/BbN1n3/8/3B1Nbn/nB1b1B2/3n1Q2/b2n4/8/8/VVVVVVVV w - 0 1");
         DrawBoard();
 
     }
@@ -96,7 +96,7 @@ public class BoardVisual : MonoBehaviour
                 //     break;
                 // }
 
-                if (BoardBot.isVoid(boardBot.currentPosition.getPiece(j, i)))
+                if (boardBot.isVoid(boardBot.getPiece(boardBot.currentPosition, j, i)))
                 {
                     tileObjects[i * rankCount + j] = null;
                     continue;
@@ -180,8 +180,8 @@ public class BoardVisual : MonoBehaviour
                 polygonCollider.SetPath(0, path);
 
                 // Draw piece
-                byte piece = boardBot.currentPosition.getPiece(j, i);
-                if (BoardBot.isVoid(piece) || BoardBot.isBlank(piece))
+                byte piece = boardBot.getPiece(boardBot.currentPosition,j, i);
+                if (boardBot.isVoid(piece) || boardBot.isBlank(piece))
                 {
                     continue;
                 }
@@ -263,7 +263,7 @@ public class BoardVisual : MonoBehaviour
             for (byte j = 0; j < rankCount; ++j)
             {
                 // Ignore ghost tiles
-                if (BoardBot.isVoid(boardBot.currentPosition.getPiece(j, i)))
+                if (boardBot.isVoid(boardBot.getPiece(boardBot.currentPosition, j, i)))
                 {
                     tileObjects[i * rankCount + j] = null;
                     continue;
@@ -324,8 +324,8 @@ public class BoardVisual : MonoBehaviour
                 polygonCollider.SetPath(0, path);
 
                 // Draw piece
-                byte piece = boardBot.currentPosition.getPiece(j, i);
-                if (BoardBot.isVoid(piece) || BoardBot.isBlank(piece))
+                byte piece = boardBot.getPiece(boardBot.currentPosition, j, i);
+                if (boardBot.isVoid(piece) || boardBot.isBlank(piece))
                 {
                     continue;
                 }
@@ -439,7 +439,7 @@ public class BoardVisual : MonoBehaviour
         CallTile(movedTile[0][0], movedTile[0][1]).GetComponent<Tile>().DeactivateHighlightTile();
         CallTile(movedTile[1][0], movedTile[1][1]).GetComponent<Tile>().DeactivateHighlightTile();
 
-        boardBot.currentPosition.pawnPromotion(selectedTile[0], selectedTile[1], promoteAt[0], promoteAt[1], piece);
+        boardBot.pawnPromotion(selectedTile[0], selectedTile[1], promoteAt[0], promoteAt[1], piece);
 
         // Visual
         Tile pawnTile = CallTile(selectedTile[0],selectedTile[1]).GetComponent<Tile>();
@@ -472,7 +472,7 @@ public class BoardVisual : MonoBehaviour
         CallTile(movedTile[0][0], movedTile[0][1]).GetComponent<Tile>().DeactivateHighlightTile();
         CallTile(movedTile[1][0], movedTile[1][1]).GetComponent<Tile>().DeactivateHighlightTile();
 
-        boardBot.currentPosition.pawnPromotion(rankFrom, fileFrom, rankTo, fileTo, piece);
+        boardBot.pawnPromotion(rankFrom, fileFrom, rankTo, fileTo, piece);
 
         // Visual
         Tile pawnTile = CallTile(rankFrom, fileFrom).GetComponent<Tile>();

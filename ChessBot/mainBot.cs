@@ -8,24 +8,19 @@ public class mainBot : MonoBehaviour
     public BoardVisual boardVisual;
     public BoardBot boardBot;
 
-    public class EvalPosition
+    public struct EvalPosition
     {
+        public int evalScore;
         public BoardBot.Position position;
         public BoardBot.Move bestMove;
-        public int evalScore;
         public byte promotePiece;
     }
 
     public BoardBot.Position position = new BoardBot.Position();
     public BoardBot.Move bestMove = new BoardBot.Move();
     public int minDepth = 4;
-    public int maxIncrease = 2;
+    public int checkExtend = 1;
     public int maxDepth = 6;
-    public int checkExtendInc = 2;
-    public int checkExtendMax = 4;
-    public bool allowCheckExtend = false;
-    public bool allowCheckExtendToMax = false;
-    public bool allowCheckExtendOverMax = false;
     public int minTime = 1000; // ms
     public int maxTime = 2000; // ms
     public bool playAsWhite = false;
@@ -33,131 +28,83 @@ public class mainBot : MonoBehaviour
     public bool isCalculating = false; // Is bot calculating position?
     public float searchStartTime;
     public int nodedOccurs = 0;
-    public BoardBot.Position[] positionPool;
-    public BoardBot.Move[] movePool;
-    public int[] scorePool;
-    public EvalPosition[] evalPositionPool;
-    public List<BoardBot.Move>[] movesPerDepthPool;
-    public byte[] promotePiecePool;
-    public int reverseCurrentDepth = 0;
 
     void Start()
     {
         boardVisual = GetComponent<BoardVisual>();
         boardBot = GetComponent<BoardBot>();
-        positionPool = new BoardBot.Position[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            positionPool[i] = new BoardBot.Position();
-        }
-        movePool = new BoardBot.Move[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            movePool[i] = new BoardBot.Move();
-        }
-        scorePool = new int[maxDepth+1];
-        evalPositionPool = new EvalPosition[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            evalPositionPool[i] = new EvalPosition();
-        }
-        movesPerDepthPool = new List<BoardBot.Move>[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            movesPerDepthPool[i] = new List<BoardBot.Move>();
-        }
-        promotePiecePool = new byte[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            promotePiecePool[i] = 0;
-        }
     }
 
-    public void SearchMoves(BoardBot.Position position, int currentDepth, byte promoteToPiece){
-        // Set position to current depth board
-        BoardBot.CopyPosition(position, positionPool[currentDepth]);
-        if (currentDepth == minDepth-1){
-        }
-        // Node Occurs
+    public void getMoves()
+    {
+        SearchMoves(boardBot.currentPosition, 0, 0);
+    }
+
+    public EvalPosition SearchMoves(BoardBot.Position position, int currentDepth, byte promoteToPiece){
         ++nodedOccurs;
         // Best Move
-        // // movePool[currentDepth] = new BoardBot.Move(); // Already created
+        BoardBot.Move bestMove = new BoardBot.Move();
         // Min value
-        scorePool[currentDepth] = positionPool[currentDepth].whiteToMove ? int.MinValue : int.MaxValue; // Only call once per depth per node(move)
+        int Score = position.whiteToMove ? int.MinValue : int.MaxValue;
         // Promote Piece
-        // promotePiecePool[currentDepth] = 0; // Already created
+        byte bestPromotion = 0;
         if (currentDepth != 0){
             // Get moves
-            movesPerDepthPool[currentDepth].Clear();
-            movesPerDepthPool[currentDepth].AddRange(positionPool[currentDepth].getAllSoftMoves());
+            List<BoardBot.Move> moves = boardBot.getAllMoves(position);
             // Play move
-            foreach (BoardBot.Move move in movesPerDepthPool[currentDepth]){
+            foreach (BoardBot.Move move in moves){
                 // Search Time Out
                 if (Time.realtimeSinceStartup - searchStartTime > minTime / 1000f)
                 {
                     Debug.LogWarning("Search timed out after " + minTime + " ms.");
-                    evalPositionPool[currentDepth].evalScore = scorePool[currentDepth];
-                    evalPositionPool[currentDepth].position = positionPool[currentDepth];
-                    evalPositionPool[currentDepth].bestMove = movePool[currentDepth];
-                    evalPositionPool[currentDepth].promotePiece = promotePiecePool[currentDepth];
-                    return;
+                    return new EvalPosition { evalScore = Score, position = position, bestMove = bestMove, promotePiece = bestPromotion };
                 }
+                BoardBot.Position nextPosition = boardBot.movePiece(position, move);
                 // If is pawn
-                byte piece = positionPool[currentDepth].getPiece(move.squareFrom);
-                if ((BoardBot.getType(piece) == (byte)0x1) && (move.rankTo == (byte)0x0)){
+                byte piece = boardBot.getPiece(position, move.squareFrom);
+                if ((boardBot.getType(piece) == (byte)0x1) && (move.rankTo == (byte)0x0)){
                     for (byte promotionPiece = 2; promotionPiece < 5; ++promotionPiece){
-                        BoardBot.CopyPosition(positionPool[currentDepth], positionPool[currentDepth-1]);
-                        positionPool[currentDepth-1].pawnPromotion(move, promotionPiece);
-                        SearchMoves(positionPool[currentDepth-1], currentDepth-1, promotionPiece);
-                        int SubScore = evalPositionPool[currentDepth-1].evalScore;
+                        nextPosition = boardBot.pawnPromotion(position, move, position.whiteToMove ? promotionPiece : (byte)(promotionPiece | 0b1000));
+                        int SubScore = SearchMoves(nextPosition, currentDepth-1, promotionPiece).evalScore;
                         // Alpha = White
                         // Beta = Black
-                        if (position.whiteToMove && (scorePool[currentDepth] < SubScore)){
-                            scorePool[currentDepth] = SubScore;
-                            movePool[currentDepth] = move;
-                            promotePiecePool[currentDepth] = promotionPiece;
-                        } else if (!position.whiteToMove && (scorePool[currentDepth] > SubScore)){
-                            scorePool[currentDepth] = SubScore;
-                            movePool[currentDepth] = move;
-                            promotePiecePool[currentDepth] = promotionPiece;
+                        if (position.whiteToMove && (Score < SubScore)){
+                            Score = SubScore;
+                            bestMove = move;
+                            bestPromotion = promotionPiece;
+                        } else if (!position.whiteToMove && (Score > SubScore)){
+                            Score = SubScore;
+                            bestMove = move;
+                            bestPromotion = promotionPiece;
                         }
                     }
                 } else {
-                    BoardBot.CopyPosition(positionPool[currentDepth], positionPool[currentDepth-1]);
-                    positionPool[currentDepth-1].movePiece(move);
-                    SearchMoves(positionPool[currentDepth-1], currentDepth-1, promotePiecePool[currentDepth]);
-                    int SubScore = evalPositionPool[currentDepth-1].evalScore;
+                    int SubScore = SearchMoves(nextPosition, currentDepth-1, bestPromotion).evalScore;
                     // Alpha = White
                     // Beta = Black
-                    if (position.whiteToMove && (scorePool[currentDepth] < SubScore)){
-                        scorePool[currentDepth] = SubScore;
-                        movePool[currentDepth] = move;
-                    } else if (!position.whiteToMove && (scorePool[currentDepth] > SubScore)){
-                        scorePool[currentDepth] = SubScore;
-                        movePool[currentDepth] = move;
+                    if (position.whiteToMove && (Score < SubScore)){
+                        Score = SubScore;
+                        bestMove = move;
+                    } else if (!position.whiteToMove && (Score > SubScore)){
+                        Score = SubScore;
+                        bestMove = move;
                     }
                 }
             }
-        } else { // If depth == 0
+        } else {
             // End of depth
-            evalPositionPool[currentDepth].evalScore = evalDefinition(position);
-            evalPositionPool[currentDepth].position = position;
-            evalPositionPool[currentDepth].promotePiece = promotePiecePool[currentDepth+1];
-            return;
+            int evalScore = evalDefinition(position);
+            return new EvalPosition{evalScore = evalDefinition(position), position = position, promotePiece = promoteToPiece};
         }
         // Only occur when finish the search
-        evalPositionPool[currentDepth].evalScore = scorePool[currentDepth];
-        evalPositionPool[currentDepth].position = position;
-        evalPositionPool[currentDepth].bestMove = movePool[currentDepth];
-        evalPositionPool[currentDepth].promotePiece = promotePiecePool[currentDepth];
-        return;
+        return new EvalPosition{evalScore = Score, position = position, bestMove = bestMove, promotePiece = bestPromotion};
     }
 
     public int evalDefinition(BoardBot.Position position){
         int Score = 0;
         for (byte file = 0; file < 20; ++file){
             for (byte rank = 0; rank < 8; ++rank){
-                byte piece = position.getPiece(rank, file);
+                byte piece = boardBot.getPiece(position, rank, file);
                 Score += materialValue(piece);
             }
         }
@@ -182,9 +129,6 @@ public class mainBot : MonoBehaviour
             // White Queen
             case (byte)5:
                 return 1100;
-            // White King
-            case (byte)6:
-                return 65536;
             // Black Pawn
             case (byte)9:
                 return -100;
@@ -200,10 +144,7 @@ public class mainBot : MonoBehaviour
             // Black Queen
             case (byte)13:
                 return -1100;
-            // Black King
-            case (byte)14:
-                return -65536;
-            // Blank, Void Idk what is the piece
+            // Blank, Void, Kings Idk what is the piece
             default:
                 return 0;
         }
@@ -213,7 +154,6 @@ public class mainBot : MonoBehaviour
     void Update(){
         if (isPlaying && !isCalculating && (playAsWhite == boardBot.currentPosition.whiteToMove) && (minDepth != 0))
         {      
-            nodedOccurs = 0;
             // Begin Search
             isCalculating = true;
 
@@ -224,14 +164,14 @@ public class mainBot : MonoBehaviour
             ++nodedOccurs;
 
             // Calculate
-            SearchMoves(boardBot.currentPosition, minDepth, 0);
+            EvalPosition bestPosition = SearchMoves(boardBot.currentPosition, minDepth, 0);
 
             // Get Best Move
-            BoardBot.Move bestMove = evalPositionPool[minDepth].bestMove;
-            if ((BoardBot.getType(boardBot.currentPosition.getPiece(evalPositionPool[minDepth].bestMove.squareFrom)) == (byte)0x1) && (evalPositionPool[minDepth].bestMove.rankTo == (byte)0x0)){
-                boardVisual.PromotePawnBot(evalPositionPool[minDepth].bestMove.rankFrom, evalPositionPool[minDepth].bestMove.fileFrom, evalPositionPool[minDepth].bestMove.rankTo, evalPositionPool[minDepth].bestMove.fileTo, evalPositionPool[minDepth].promotePiece);
+            BoardBot.Move bestMove = bestPosition.bestMove;
+            if ((boardBot.getType(boardBot.getPiece(boardBot.currentPosition, bestPosition.bestMove.squareFrom)) == (byte)0x1) && (bestPosition.bestMove.rankTo == (byte)0x0)){
+                boardVisual.PromotePawnBot(bestPosition.bestMove.rankFrom, bestPosition.bestMove.fileFrom, bestPosition.bestMove.rankTo, bestPosition.bestMove.fileTo, bestPosition.promotePiece);
             } else {
-                boardBot.currentPosition.movePiece(bestMove);
+                boardBot.movePiece(bestMove);
                 boardVisual.MakeMove(bestMove.rankFrom, bestMove.fileFrom, bestMove.rankTo, bestMove.fileTo);
             }
             isCalculating = false;

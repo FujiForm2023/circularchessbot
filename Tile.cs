@@ -67,7 +67,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
     }
 
     public void OnPointerClick(PointerEventData eventData){
-        if (piece != null && (BoardBot.isWhite(boardBot.currentPosition.getPiece(rank, file)) == boardBot.currentPosition.whiteToMove)){
+        if (piece != null && (boardBot.isWhite(boardBot.getPiece(rank, file)) == boardBot.currentPosition.whiteToMove)){
             if (boardVisual.selectedTile[0] != 255 && boardVisual.selectedTile[1] != 255){
                 
             }
@@ -93,7 +93,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
         }
         if (boardVisual.selectedTile[0] != 255 && boardVisual.selectedTile[1] != 255){
             if ((boardVisual.selectedTile[0] != rank) || (boardVisual.selectedTile[1] != file)){
-                if (BoardBot.isAttackable(boardBot.currentPosition.getPiece(boardVisual.selectedTile[0], boardVisual.selectedTile[1]), boardBot.currentPosition.getPiece(rank, file))){
+                if (boardBot.isAttackable(boardBot.getPiece(boardBot.currentPosition, boardVisual.selectedTile[0], boardVisual.selectedTile[1]), boardBot.getPiece(boardBot.currentPosition, rank, file))){
                     if (activeHighlight != null){
                         
                         // Get tile properties
@@ -102,14 +102,14 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
                         // Interrupted promotion
                         // If is a pawn
                         if (rank == 0){
-                            if (boardBot.currentPosition.getPiece(boardVisual.selectedTile[0], boardVisual.selectedTile[1]) == 1){
+                            if (boardBot.getPiece(boardBot.currentPosition, boardVisual.selectedTile[0], boardVisual.selectedTile[1]) == 1){
                                 boardVisual.promoteAt = new byte[]{rank, file};
                                 pawnPromoteUI = Instantiate(boardVisual.prefabs[13], transform.position, Quaternion.identity);
                                 pawnPromoteUI.transform.SetParent(transform);
                                 pawnPromoteUI.transform.position = new Vector3(pawnPromoteUI.transform.position.x, pawnPromoteUI.transform.position.y, -0.1f);
                                 return;
                             }
-                            else if (boardBot.currentPosition.getPiece(boardVisual.selectedTile[0], boardVisual.selectedTile[1]) == 9){
+                            else if (boardBot.getPiece(boardBot.currentPosition, boardVisual.selectedTile[0], boardVisual.selectedTile[1]) == 9){
                                 boardVisual.promoteAt = new byte[]{rank, file};
                                 pawnPromoteUI = Instantiate(boardVisual.prefabs[14], transform.position, Quaternion.identity);
                                 pawnPromoteUI.transform.SetParent(transform);
@@ -135,7 +135,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
                         eventData.Use();
                         return;
                     }
-                    else if (BoardBot.isFriendly(boardBot.currentPosition.getPiece(rank, file), boardBot.currentPosition.getPiece(boardVisual.selectedTile[0], boardVisual.selectedTile[1]))){
+                    else if (boardBot.isFriendly(boardBot.getPiece(boardBot.currentPosition, rank, file), boardBot.getPiece(boardBot.currentPosition, boardVisual.selectedTile[0], boardVisual.selectedTile[1]))){
                         boardVisual.CallTile(boardVisual.selectedTile[0], boardVisual.selectedTile[1]).GetComponent<Tile>().DeselectTile();
                     }
                 }
@@ -144,7 +144,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
 
         if (piece != null){
             piece.transform.position = GetMouseWorldPosition();
-            if (BoardBot.isWhite(boardBot.currentPosition.getPiece(rank, file)) == boardBot.currentPosition.whiteToMove){
+            if (boardBot.isWhite(boardBot.getPiece(rank, file)) == boardBot.currentPosition.whiteToMove){
                 if (!AAA){
                     material.color = new Color(0.96f, 0.96f, 0.51f, 1.0f);
                     AAA = true;
@@ -154,7 +154,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
                         boardVisual.CallTile(boardVisual.selectedTile[0], boardVisual.selectedTile[1]).GetComponent<Tile>().DeactivateHighlightTile();
                         boardVisual.CallTile(boardVisual.selectedTile[0], boardVisual.selectedTile[1]).GetComponent<Tile>().DeleteMovements();
                     }
-                    movements = BoardBot.deconstructMoves(boardBot.currentPosition.getMovement(rank, file));
+                    movements = boardBot.deconstructMoves(boardBot.getMovement(boardBot.currentPosition, rank, file));
                     foreach (byte[] movement in movements){
                         boardVisual.CallTile(movement[0], movement[1]).GetComponent<Tile>().ActivateHighlightMove();
                     }
@@ -191,7 +191,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
                     // Interrupted promotion
                     // If is a pawn
                     if (rank == 1){
-                        if (boardBot.currentPosition.getPiece(rank, file) == 1){
+                        if (boardBot.getPiece(boardBot.currentPosition, rank, file) == 1){
                             boardVisual.promoteAt = new byte[]{tileProperties.rank, tileProperties.file};
                             pawnPromoteUI = Instantiate(boardVisual.prefabs[13], placeTile.transform.position, Quaternion.identity);
                             pawnPromoteUI.transform.SetParent(placeTile.transform);
@@ -199,7 +199,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
                             piece.transform.position = transform.position;
                             return;
                         }
-                        else if (boardBot.currentPosition.getPiece(rank, file) == 9){
+                        else if (boardBot.getPiece(boardBot.currentPosition, rank, file) == 9){
                             boardVisual.promoteAt = new byte[]{tileProperties.rank, tileProperties.file};
                             pawnPromoteUI = Instantiate(boardVisual.prefabs[14], placeTile.transform.position, Quaternion.identity);
                             pawnPromoteUI.transform.SetParent(transform);
@@ -298,7 +298,7 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
     public void SelectTile(){
         ActivateHighlightTile();
         BBB = true;
-        movements = BoardBot.deconstructMoves(boardBot.currentPosition.getMovement(rank, file));
+        movements = boardBot.deconstructMoves(boardBot.getMovement(boardBot.currentPosition, rank, file));
         foreach (byte[] movement in movements){
             boardVisual.CallTile(movement[0], movement[1]).GetComponent<Tile>().ActivateHighlightMove();
         }
@@ -330,17 +330,17 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
         boardVisual.movedTile[1] = new byte[]{tileProperties.rank, tileProperties.file};
         
         // Move piece (Data)
-        boardBot.currentPosition.movePiece(rank, file, tileProperties.rank, tileProperties.file);
+        boardBot.movePiece(rank, file, tileProperties.rank, tileProperties.file);
 
         // Castling
         if (boardBot.currentPosition.isCastle){
-            if (boardBot.currentPosition.getPiece(tileProperties.rank, tileProperties.file) == 6){ // Is white king
+            if (boardBot.getPiece(boardBot.currentPosition, tileProperties.rank, tileProperties.file) == 6){ // Is white king
                 if (tileProperties.file == 6){
                     boardVisual.CallTile(7, 7).GetComponent<Tile>().UponCastle(boardVisual.CallTile(7, 5));
                 } else if (tileProperties.file == 2){
                     boardVisual.CallTile(7, 0).GetComponent<Tile>().UponCastle(boardVisual.CallTile(7, 3));
                 }
-            } else if (boardBot.currentPosition.getPiece(rank, tileProperties.file) == 14){ // Is black king
+            } else if (boardBot.getPiece(boardBot.currentPosition, rank, tileProperties.file) == 14){ // Is black king
                 if (tileProperties.file == 11){
                     boardVisual.CallTile(7, 10).GetComponent<Tile>().UponCastle(boardVisual.CallTile(7, 12));
                 } else if (tileProperties.file == 15){
@@ -377,13 +377,13 @@ public class Tile : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IP
 
         // Castling
         if (boardBot.currentPosition.isCastle){
-            if (boardBot.currentPosition.getPiece(tileProperties.rank, tileProperties.file) == 6){ // Is white king
+            if (boardBot.getPiece(boardBot.currentPosition, tileProperties.rank, tileProperties.file) == 6){ // Is white king
                 if (tileProperties.file == 6){
                     boardVisual.CallTile(7, 7).GetComponent<Tile>().UponCastle(boardVisual.CallTile(7, 5));
                 } else if (tileProperties.file == 2){
                     boardVisual.CallTile(7, 0).GetComponent<Tile>().UponCastle(boardVisual.CallTile(7, 3));
                 }
-            } else if (boardBot.currentPosition.getPiece(rank, tileProperties.file) == 14){ // Is black king
+            } else if (boardBot.getPiece(boardBot.currentPosition, rank, tileProperties.file) == 14){ // Is black king
                 if (tileProperties.file == 11){
                     boardVisual.CallTile(7, 10).GetComponent<Tile>().UponCastle(boardVisual.CallTile(7, 12));
                 } else if (tileProperties.file == 15){

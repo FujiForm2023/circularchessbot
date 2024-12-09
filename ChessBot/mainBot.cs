@@ -153,7 +153,8 @@ public class mainBot : MonoBehaviour
     // Ready for next turn
     void Update(){
         if (isPlaying && !isCalculating && (playAsWhite == boardBot.currentPosition.whiteToMove) && (minDepth != 0))
-        {      
+        {
+            nodedOccurs = 0;
             // Begin Search
             isCalculating = true;
 

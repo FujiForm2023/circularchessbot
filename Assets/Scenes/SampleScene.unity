@@ -1058,16 +1058,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardVisual: {fileID: 0}
   boardBot: {fileID: 0}
+  position:
+    boardArray: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    whiteToMove: 1
+    castleAbility: 0
+    halfMove: 0
+    fullMove: 0
+    uniqueHash: 0
+    gameStatus: 4
+    isCastle: 0
   minDepth: 3
-  checkExtend: 1
+  maxIncrease: 2
   maxDepth: 6
-  minTime: 1000
+  checkExtendInc: 2
+  checkExtendMax: 4
+  allowCheckExtend: 0
+  allowCheckExtendToMax: 0
+  allowCheckExtendOverMax: 0
+  minTime: 60000
   maxTime: 2000
   playAsWhite: 1
   isPlaying: 1
   isCalculating: 0
   searchStartTime: 0
   nodedOccurs: 0
+  positionPool: []
+  scorePool: 
+  promotePiecePool: 
+  reverseCurrentDepth: 0
 --- !u!114 &1053891891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1080,6 +1098,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c1ae5ad438655349a0b4f1bff1a1d8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentPosition:
+    boardArray: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    whiteToMove: 1
+    castleAbility: 0
+    halfMove: 0
+    fullMove: 0
+    uniqueHash: 0
+    gameStatus: 4
+    isCastle: 0
 --- !u!1 &1194421661
 GameObject:
   m_ObjectHideFlags: 0

@@ -804,9 +804,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1053891887}
   - component: {fileID: 1053891886}
-  - component: {fileID: 1053891888}
-  - component: {fileID: 1053891890}
   - component: {fileID: 1053891891}
+  - component: {fileID: 1053891890}
+  - component: {fileID: 1053891893}
+  - component: {fileID: 1053891892}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -1032,18 +1033,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1053891888
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053891885}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 87bc35be4253e9c4e93541e7433f7999, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1053891890
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1058,6 +1047,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardVisual: {fileID: 0}
   boardBot: {fileID: 0}
+  botController: {fileID: 0}
   position:
     boardArray: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     whiteToMove: 1
@@ -1086,6 +1076,7 @@ MonoBehaviour:
   scorePool: 
   promotePiecePool: 
   reverseCurrentDepth: 0
+  botControllerAllowed: 0
 --- !u!114 &1053891891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1107,6 +1098,72 @@ MonoBehaviour:
     uniqueHash: 0
     gameStatus: 4
     isCastle: 0
+--- !u!114 &1053891892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1053891885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 785c3df3350766a4a9aa5f354db5566a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainBot1: {fileID: 1053891890}
+  mainBot2: {fileID: 1053891893}
+  whoIsMoving: {fileID: 0}
+  boardBot: {fileID: 1053891891}
+  allowedBotMove: 1
+  interval: 1
+  startTime: 0
+  inSearch: 0
+  startDelay: 5
+  startMoving: 0
+--- !u!114 &1053891893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1053891885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 936ad5ea8842e2746b75b326ffd14d7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boardVisual: {fileID: 0}
+  boardBot: {fileID: 0}
+  botController: {fileID: 0}
+  position:
+    boardArray: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    whiteToMove: 1
+    castleAbility: 0
+    halfMove: 0
+    fullMove: 0
+    uniqueHash: 0
+    gameStatus: 4
+    isCastle: 0
+  minDepth: 3
+  maxIncrease: 2
+  maxDepth: 6
+  checkExtendInc: 2
+  checkExtendMax: 4
+  allowCheckExtend: 0
+  allowCheckExtendToMax: 0
+  allowCheckExtendOverMax: 0
+  minTime: 60000
+  maxTime: 2000
+  playAsWhite: 0
+  isPlaying: 1
+  isCalculating: 0
+  searchStartTime: 0
+  nodedOccurs: 0
+  positionPool: []
+  scorePool: 
+  promotePiecePool: 
+  reverseCurrentDepth: 0
+  botControllerAllowed: 0
 --- !u!1 &1194421661
 GameObject:
   m_ObjectHideFlags: 0

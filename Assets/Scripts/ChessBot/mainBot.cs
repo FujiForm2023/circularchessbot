@@ -7,7 +7,7 @@ public class mainBot : MonoBehaviour
 {
     public BoardVisual boardVisual;
     public BoardBot boardBot;
-
+    public BotController botController;
     public class EvalPosition
     {
         public BoardBot.Position position;
@@ -41,6 +41,7 @@ public class mainBot : MonoBehaviour
     public byte[] promotePiecePool;
     public int reverseCurrentDepth = 0;
     public BoardBot.Move lastBestMove = new BoardBot.Move{rankFrom = 0, fileFrom = 0, rankTo = 0, fileTo = 0};
+    public bool botControllerAllowed = false;
 
     void Start()
     {
@@ -126,7 +127,7 @@ public class mainBot : MonoBehaviour
                 } else {
                     if (BoardBot.isEnemyKing(positionPool[currentDepth-1].getPiece(move.squareFrom), positionPool[currentDepth-1].getPiece(move.squareTo))){
                         scorePool[currentDepth] = position.whiteToMove ? int.MaxValue : int.MinValue;
-                        continue;
+                        break;
                     }
                     BoardBot.CopyPosition(positionPool[currentDepth], positionPool[currentDepth-1]);
                     positionPool[currentDepth-1].softMovePiece(move);
@@ -216,7 +217,7 @@ public class mainBot : MonoBehaviour
 
     // Ready for next turn
     void Update(){
-        if (isPlaying && !isCalculating && (playAsWhite == boardBot.currentPosition.whiteToMove) && (minDepth != 0))
+        if (botControllerAllowed && isPlaying && !isCalculating && (playAsWhite == boardBot.currentPosition.whiteToMove) && (minDepth != 0))
         {    
             nodedOccurs = 0;
             // Begin Search
@@ -248,6 +249,7 @@ public class mainBot : MonoBehaviour
             isCalculating = false;
             Debug.Log(nodedOccurs + " nodes");
             Debug.Log((Time.realtimeSinceStartup - searchStartTime)*1000 + " ms");
+            botControllerAllowed = !botControllerAllowed;
         }
     }
 

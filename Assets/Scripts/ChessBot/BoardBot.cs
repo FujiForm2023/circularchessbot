@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 public class BoardBot : MonoBehaviour
 {
@@ -69,6 +70,7 @@ public class BoardBot : MonoBehaviour
                 _file = this.fileOverload(value);
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte fileOverload(byte file)
         {
             return (byte)((file + 40) % 20);
@@ -115,328 +117,405 @@ public class BoardBot : MonoBehaviour
         currentPosition.isCastle = false;
     }
     // BoardData Extends
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankOutOfBounds(int rank)
     {
         return rank < 0 || rank > 7;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankOutOfBounds(ref int rank)
     {
         return rank < 0 || rank > 7;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankOutOfBounds(byte rank)
     {
         return rank < 0 || rank > 7;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankOutOfBounds(ref byte rank)
     {
         return rank < 0 || rank > 7;
     }
     // Method overloading
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankInBounds(int rank)
     {
         return rank >= 0 && rank <= 7;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankInBounds(ref int rank)
     {
         return rank >= 0 && rank <= 7;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankInBounds(byte rank)
     {
         return rank >= 0 && rank <= 7;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool rankInBounds(ref byte rank)
     {
         return rank >= 0 && rank <= 7;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isWhite(byte piece)
     {
         return (piece & 0b1000) == 0 && isPiece(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isWhite(ref byte piece)
     {
         return (piece & 0b1000) == 0 && isPiece(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isBlack(byte piece)
     {
         return (piece & 0b1000) != 0 && isPiece(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isBlack(ref byte piece)
     {
         return (piece & 0b1000) != 0 && isPiece(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isPiece(byte piece)
     {
         return (piece & 0b0111) != 0;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isPiece(ref byte piece)
     {
         return (piece & 0b0111) != 0;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isPieceSafeValid(byte piece)
     {
         return !(((piece & 0b0111) == 0) || ((piece & 0b0111) == 7));
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isPieceSafeValid(ref byte piece)
     {
         return !(((piece & 0b0111) == 0) || ((piece & 0b0111) == 7));
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isBlank(byte piece)
     {
         return piece == 0;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isBlank(ref byte piece)
     {
         return piece == 0;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isVoid(byte piece)
     {
         return piece == 8;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isVoid(ref byte piece)
     {
         return piece == 8;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isPawn(byte piece)
     {
         return (piece & 0b0111) == 1;
         // WhitePawn = 0x1, // 0001
         // BlackPawn = 0x9, // 1001
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isPawn(ref byte piece)
     {
         return (piece & 0b0111) == 1;
         // WhitePawn = 0x1, // 0001
         // BlackPawn = 0x9, // 1001
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isKnight(byte piece)
     {
         return (piece & 0b0111) == 2;
         // WhiteKnight = 0x2, // 0010
         // BlackKnight = 0xA, // 1010
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isKnight(ref byte piece)
     {
         return (piece & 0b0111) == 2;
         // WhiteKnight = 0x2, // 0010
         // BlackKnight = 0xA, // 1010
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isBishop(byte piece)
     {
         return (piece & 0b0111) == 3;
         // WhiteBishop = 0x3, // 0011
         // BlackBishop = 0xB, // 1011
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isBishop(ref byte piece)
     {
         return (piece & 0b0111) == 3;
         // WhiteBishop = 0x3, // 0011
         // BlackBishop = 0xB, // 1011
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isRook(byte piece)
     {
         return (piece & 0b0111) == 4;
         // WhiteRook = 0x4, // 0100
         // BlackRook = 0xC, // 1100
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isRook(ref byte piece)
     {
         return (piece & 0b0111) == 4;
         // WhiteRook = 0x4, // 0100
         // BlackRook = 0xC, // 1100
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isQueen(byte piece)
     {
         return (piece & 0b0111) == 5;
         // WhiteQueen = 0x5, // 0101
         // BlackQueen = 0xD, // 1101
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isQueen(ref byte piece)
     {
         return (piece & 0b0111) == 5;
         // WhiteQueen = 0x5, // 0101
         // BlackQueen = 0xD, // 1101
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isKing(byte piece)
     {
         return (piece & 0b0111) == 6;
         // WhiteKing = 0x6, // 0110
         // BlackKing = 0xE // 1110
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isKing(ref byte piece)
     {
         return (piece & 0b0111) == 6;
         // WhiteKing = 0x6, // 0110
         // BlackKing = 0xE // 1110
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isMajorPiece(byte piece){
         return isKnight(ref piece) || isBishop(ref piece) || isRook(ref piece) || isQueen(ref piece) || isKing(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isMajorPiece(ref byte piece){
         return isKnight(ref piece) || isBishop(ref piece) || isRook(ref piece) || isQueen(ref piece) || isKing(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isMajorNoKingPiece(byte piece){
         return isKnight(ref piece) || isBishop(ref piece) || isRook(ref piece) || isQueen(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isMajorNoKingPiece(ref byte piece){
         return isKnight(ref piece) || isBishop(ref piece) || isRook(ref piece) || isQueen(ref piece);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte getType(byte piece)
     {
         return (byte)(piece & 0b0111);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte getType(ref byte piece)
     {
         return (byte)(piece & 0b0111);
     }
     // Method overloading
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte fileOverload(byte file)
     {
         return (byte)((file+40) % 20);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte fileOverload(ref byte file)
     {
         return (byte)((file+40) % 20);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte fileOverload(int file)
     {
         return (byte)((file+40) % 20);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte fileOverload(ref int file)
     {
         return (byte)((file+40) % 20);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendly(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isPiece(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendly(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isPiece(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyPawn(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isPawn(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyPawn(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isPawn(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyKnight(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isKnight(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyKnight(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isKnight(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyBishop(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isBishop(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyBishop(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isBishop(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyRook(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isRook(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyRook(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isRook(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyQueen(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isQueen(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyQueen(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isQueen(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyKing(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isKing(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isFriendlyKing(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isWhite(ref piece2)) && isKing(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemy(byte piece1, byte piece2)
     {
         return isWhite(ref piece1) == isBlack(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemy(ref byte piece1, ref byte piece2)
     {
         return isWhite(ref piece1) == isBlack(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyPawn(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isPawn(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyPawn(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isPawn(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyKnight(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isKnight(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyKnight(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isKnight(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyBishop(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isBishop(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyBishop(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isBishop(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyRook(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isRook(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyRook(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isRook(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyQueen(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isQueen(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyQueen(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isQueen(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyKing(byte piece1, byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isKing(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyKing(ref byte piece1, ref byte piece2)
     {
         return (isWhite(ref piece1) == isBlack(ref piece2)) && isKing(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyKing(bool piece1IsWhite, ref byte piece2)
     {
         return (piece1IsWhite == isBlack(ref piece2)) && isKing(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isEnemyKing(ref bool piece1IsWhite, ref byte piece2)
     {
         return (piece1IsWhite == isBlack(ref piece2)) && isKing(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isAttackable(byte piece1, byte piece2)
     {
         return isBlank(ref piece2) || isEnemy(ref piece1, ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isAttackable(ref byte piece1, ref byte piece2)
     {
         return isBlank(ref piece2) || isEnemy(ref piece1, ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isAttackableNoVoid(byte piece1, byte piece2)
     {
         return isAttackable(ref piece1, ref piece2) && !isVoid(ref piece2);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isAttackableNoVoid(ref byte piece1, ref byte piece2)
     {
         return isAttackable(ref piece1, ref piece2) && !isVoid(ref piece2);
@@ -561,10 +640,7 @@ public class BoardBot : MonoBehaviour
         {
             ++this.halfMove;
             this.whiteToMove = !this.whiteToMove;
-            if (this.whiteToMove)
-            {
-                this.fullMove++;
-            }
+            if (this.whiteToMove){++this.fullMove;}
         }
         public Square whiteKingPosition;
         public bool whiteKingExists
@@ -614,80 +690,100 @@ public class BoardBot : MonoBehaviour
         }
 
         // Position methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(Square square)
         {
-            int shift = square.rank << 2;
-            return (byte)((boardArray[square.file] >> shift) & 0xF);
+            return (byte)((boardArray[square.file] >> (square.rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(ref Square square)
         {
-            int shift = square.rank << 2;
-            return (byte)((boardArray[square.file] >> shift) & 0xF);
+            return (byte)((boardArray[square.file] >> square.rank << 2) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(byte rank, byte file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(ref byte rank, ref byte file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(byte rank, int file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(ref byte rank, ref int file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(int rank, byte file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(ref int rank, ref byte file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(int rank, int file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte getPiece(ref int rank, ref int file)
         {
-            int shift = rank << 2;
-            return (byte)((boardArray[fileOverload(file)] >> shift) & 0xF);
+            return (byte)((boardArray[fileOverload(file)] >> (rank << 2)) & 0xF);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void setPiece(Square square, byte piece)
         {
-            int shift = square.rank << 2;
-            boardArray[square.file] &= (uint)~(0xF << shift);
-            boardArray[square.file] |= (uint)(piece << shift);
+            boardArray[square.file] &= (uint)~(0xF << (square.rank << 2));
+            boardArray[square.file] |= (uint)(piece << (square.rank << 2));
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void setPiece(ref Square square, byte piece)
+        {
+            boardArray[square.file] &= (uint)~(0xF << (square.rank << 2));
+            boardArray[square.file] |= (uint)(piece << (square.rank << 2));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void setPiece(Square square, ref byte piece)
+        {
+            boardArray[square.file] &= (uint)~(0xF << (square.rank << 2));
+            boardArray[square.file] |= (uint)(piece << (square.rank << 2));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void setPiece(ref Square square, ref byte piece)
+        {
+            boardArray[square.file] &= (uint)~(0xF << (square.rank << 2));
+            boardArray[square.file] |= (uint)(piece << (square.rank << 2));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void setPiece(byte rank, byte file, byte piece)
         {
-            int shift = rank << 2;
-            boardArray[file] &= (uint)~(0xF << shift);
-            boardArray[file] |= (uint)(piece << shift);
+            boardArray[file] &= (uint)~(0xF << (rank << 2));
+            boardArray[file] |= (uint)(piece << (rank << 2));
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void setPiece(byte rank, int file, byte piece)
         {
-            int shift = rank << 2;
-            boardArray[file] &= (uint)~(0xF << shift);
-            boardArray[file] |= (uint)(piece << shift);
+            boardArray[file] &= (uint)~(0xF << (rank << 2));
+            boardArray[file] |= (uint)(piece << (rank << 2));
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void setPiece(int rank, byte file, byte piece)
         {
             int shift = rank << 2;
             boardArray[file] &= (uint)~(0xF << shift);
             boardArray[file] |= (uint)(piece << shift);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void setPiece(int rank, int file, byte piece)
         {
             int shift = rank << 2;

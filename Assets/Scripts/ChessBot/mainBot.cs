@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ public class mainBot : MonoBehaviour
     public BoardVisual boardVisual;
     public BoardBot boardBot;
     public BotController botController;
+    public ZobristHashing zobristHashing;
     public class EvalPosition
     {
         public BoardBot.Position position;
@@ -42,44 +44,24 @@ public class mainBot : MonoBehaviour
     public int reverseCurrentDepth = 0;
     public BoardBot.Move lastBestMove = new BoardBot.Move{rankFrom = 0, fileFrom = 0, rankTo = 0, fileTo = 0};
     public bool botControllerAllowed = false;
+    public bool noBotController = false;
+    public List<ulong> tranpositionTable = new List<ulong>();
 
     void Start()
     {
         boardVisual = GetComponent<BoardVisual>();
         boardBot = GetComponent<BoardBot>();
+        zobristHashing = new ZobristHashing();
         positionPool = new BoardBot.Position[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            positionPool[i] = new BoardBot.Position();
-        }
         movePool = new BoardBot.Move[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            movePool[i] = new BoardBot.Move();
-        }
         scorePool = new int[maxDepth+1];
         evalPositionPool = new EvalPosition[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            evalPositionPool[i] = new EvalPosition();
-        }
         movesPerDepthPool = new List<BoardBot.Move>[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            movesPerDepthPool[i] = new List<BoardBot.Move>();
-        }
         promotePiecePool = new byte[maxDepth+1];
-        for (int i = 0; i < maxDepth+1; ++i)
-        {
-            promotePiecePool[i] = 0;
-        }
+        ResetPool();
     }
 
     public void SearchMoves(BoardBot.Position position, int currentDepth, byte promoteToPiece){
-        // Set position to current depth board
-        BoardBot.CopyPosition(position, positionPool[currentDepth]);
-        if (currentDepth == minDepth-1){
-        }
         // Node Occurs
         ++nodedOccurs;
         // Best Move
@@ -88,6 +70,17 @@ public class mainBot : MonoBehaviour
         scorePool[currentDepth] = positionPool[currentDepth].whiteToMove ? int.MinValue : int.MaxValue; // Only call once per depth per node(move)
         // Promote Piece
         // promotePiecePool[currentDepth] = 0; // Already created
+
+        ulong boardHash = zobristHashing.GenerateHash(positionPool[currentDepth].boardArray);
+        if (currentDepth != 0)
+        {
+            if (tranpositionTable.Contains(boardHash)){
+            return;
+            } else {
+                tranpositionTable.Add(boardHash);
+            }
+        }
+
         if (currentDepth != 0){
             // Get moves
             movesPerDepthPool[currentDepth].Clear();
@@ -104,10 +97,14 @@ public class mainBot : MonoBehaviour
                     evalPositionPool[currentDepth].promotePiece = promotePiecePool[currentDepth];
                     return;
                 }
+                if (BoardBot.isEnemyKing(positionPool[currentDepth].getPiece(move.squareFrom), positionPool[currentDepth].getPiece(move.squareTo))){
+                    scorePool[currentDepth] = position.whiteToMove ? int.MaxValue : int.MinValue;
+                    break;
+                }
                 // If is pawn
                 byte piece = positionPool[currentDepth].getPiece(move.squareFrom);
                 if ((BoardBot.getType(piece) == (byte)0x1) && (move.rankTo == (byte)0x0)){
-                    for (byte promotionPiece = 2; promotionPiece < 5; ++promotionPiece){
+                    for (byte promotionPiece = (byte)(2 + (positionPool[currentDepth].whiteToMove ? 0 : 8)); promotionPiece < 5 + (positionPool[currentDepth].whiteToMove ? 0 : 8); ++promotionPiece){
                         BoardBot.CopyPosition(positionPool[currentDepth], positionPool[currentDepth-1]);
                         positionPool[currentDepth-1].pawnPromotion(move, promotionPiece);
                         SearchMoves(positionPool[currentDepth-1], currentDepth-1, promotionPiece);
@@ -125,10 +122,6 @@ public class mainBot : MonoBehaviour
                         }
                     }
                 } else {
-                    if (BoardBot.isEnemyKing(positionPool[currentDepth-1].getPiece(move.squareFrom), positionPool[currentDepth-1].getPiece(move.squareTo))){
-                        scorePool[currentDepth] = position.whiteToMove ? int.MaxValue : int.MinValue;
-                        break;
-                    }
                     BoardBot.CopyPosition(positionPool[currentDepth], positionPool[currentDepth-1]);
                     positionPool[currentDepth-1].softMovePiece(move);
                     SearchMoves(positionPool[currentDepth-1], currentDepth-1, promotePiecePool[currentDepth]);
@@ -217,14 +210,19 @@ public class mainBot : MonoBehaviour
 
     // Ready for next turn
     void Update(){
-        if (botControllerAllowed && isPlaying && !isCalculating && (playAsWhite == boardBot.currentPosition.whiteToMove) && (minDepth != 0))
+        if ((noBotController || botControllerAllowed) && isPlaying && !isCalculating && (playAsWhite == boardBot.currentPosition.whiteToMove) && (minDepth != 0))
         {    
             nodedOccurs = 0;
+
+            ResetPool();
+
             // Begin Search
             isCalculating = true;
 
             // Set Timer
             searchStartTime = Time.realtimeSinceStartup;
+
+            BoardBot.CopyPosition(boardBot.currentPosition, positionPool[minDepth]);
 
             // Calculate
             SearchMoves(boardBot.currentPosition, minDepth, 0);
@@ -232,14 +230,13 @@ public class mainBot : MonoBehaviour
             // Get Best Move
             BoardBot.Move bestMove = evalPositionPool[minDepth].bestMove;
 
-            if (SameMove(bestMove) || (bestMove.rankFrom == bestMove.rankTo && bestMove.fileFrom == bestMove.fileTo)){
+            if ((bestMove.rankFrom == bestMove.rankTo && bestMove.fileFrom == bestMove.fileTo)){
                 Debug.Log("Checkmate!");
                 isPlaying = false;
             } else if ((BoardBot.getType(boardBot.currentPosition.getPiece(evalPositionPool[minDepth].bestMove.squareFrom)) == (byte)0x1) && (evalPositionPool[minDepth].bestMove.rankTo == (byte)0x0)){
                 boardVisual.PromotePawnBot(evalPositionPool[minDepth].bestMove.rankFrom, evalPositionPool[minDepth].bestMove.fileFrom, evalPositionPool[minDepth].bestMove.rankTo, evalPositionPool[minDepth].bestMove.fileTo, evalPositionPool[minDepth].promotePiece);
             } else {
                 boardBot.currentPosition.movePiece(bestMove);
-                BoardBot.DumpMove(bestMove);
                 boardVisual.MakeMove(bestMove.rankFrom, bestMove.fileFrom, bestMove.rankTo, bestMove.fileTo);
             }
             lastBestMove.rankFrom = bestMove.rankFrom;
@@ -258,5 +255,29 @@ public class mainBot : MonoBehaviour
             return true;
         }
         return false;
+    }
+
+    public void ResetPool(){
+        for (int i = 0; i < maxDepth+1; ++i)
+        {
+            positionPool[i] = new BoardBot.Position();
+        }
+        for (int i = 0; i < maxDepth+1; ++i)
+        {
+            movePool[i] = new BoardBot.Move();
+        }
+        for (int i = 0; i < maxDepth+1; ++i)
+        {
+            evalPositionPool[i] = new EvalPosition();
+        }
+        for (int i = 0; i < maxDepth+1; ++i)
+        {
+            movesPerDepthPool[i] = new List<BoardBot.Move>();
+        }
+        for (int i = 0; i < maxDepth+1; ++i)
+        {
+            promotePiecePool[i] = 0;
+        }
+        tranpositionTable.Clear();
     }
 }

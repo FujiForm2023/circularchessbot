@@ -501,6 +501,14 @@ public class BoardBot : MonoBehaviour
         return (piece1IsWhite == isBlack(ref piece2)) && isKing(ref piece2);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool isEnemyPiece(byte piece1, byte piece2){
+        return isEnemy(ref piece1, ref piece2) && isPiece(ref piece2);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool isEnemyPiece(ref byte piece1, ref byte piece2){
+        return isEnemy(ref piece1, ref piece2) && isPiece(ref piece2);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool isAttackable(byte piece1, byte piece2)
     {
         return isBlank(ref piece2) || isEnemy(ref piece1, ref piece2);
@@ -1327,11 +1335,11 @@ public class BoardBot : MonoBehaviour
                     moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-2), fileTo = file});
                 }
             }
-            if (rankInBounds(rank-1) && isEnemy(piece, getPiece(rank-1, file+1)))
+            if (rankInBounds(rank-1) && isEnemyPiece(piece, getPiece(rank-1, file+1)))
             {
                 moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file+1)});
             }
-            if (rankInBounds(rank-1) && isEnemy(piece, getPiece(rank-1, file-1)))
+            if (rankInBounds(rank-1) && isEnemyPiece(piece, getPiece(rank-1, file-1)))
             {
                 moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = (byte)(rank-1), fileTo = fileOverload(file-1)});
             }
@@ -1607,7 +1615,7 @@ public class BoardBot : MonoBehaviour
                 }
                 if (q)
                 {
-                    if (isBlank(getPiece(7, 14)) && isBlank(getPiece(7, 15)) && isBlank(getPiece(7, 16)) && !isCheckAfterMove(rank, file, rank, 16) && !isCheckAfterMove(rank, file, rank, 15))
+                    if (isBlank(getPiece(7, 14)) && isBlank(getPiece(7, 15)) && isBlank(getPiece(7, 16)) && !isCheckAfterMove(rank, file, rank, 14) && !isCheckAfterMove(rank, file, rank, 15))
                     {
                         moves.Add(new Move{rankFrom = rank, fileFrom = file, rankTo = 7, fileTo = 15});
                     }
@@ -1672,17 +1680,11 @@ public class BoardBot : MonoBehaviour
         }
         public bool isCheckAfterMove(Square squareFrom, Square squareTo)
         {
-            softMovePiece(squareFrom, squareTo);
-            bool boolCheck = isCheck();
-            softMovePiece(squareTo, squareFrom);
-            return boolCheck;
+            return isCheckAfterMove(new Move{rankFrom = squareFrom.rank, fileFrom = squareFrom.file, rankTo = squareTo.rank, fileTo = squareTo.file});
         }
         public bool isCheckAfterMove(byte rankFrom, byte fileFrom, byte rankTo, byte fileTo)
         {
-            softMovePiece(rankFrom, fileFrom, rankTo, fileTo);
-            bool boolCheck = isCheck();
-            softMovePiece(rankTo, fileTo, rankFrom, fileFrom);
-            return boolCheck;
+            return isCheckAfterMove(new Move{rankFrom = rankFrom, fileFrom = fileFrom, rankTo = rankTo, fileTo = fileTo});
         }
         public bool isCheck()
         {
@@ -1756,7 +1758,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank+i, file+i);
             while (rankInBounds(rank+i) && isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isBishop(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -1773,7 +1775,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank-i, file-i);
             while (rankInBounds(rank-i) && isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isBishop(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -1790,7 +1792,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank+i, file-i);
             while (rankInBounds(rank+i) && isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isBishop(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -1807,7 +1809,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank-i, file+i);
             while (rankInBounds(rank-i) && isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isBishop(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -1823,53 +1825,35 @@ public class BoardBot : MonoBehaviour
             // King
             checkingPiece = getPiece(rank+1, file);
             isRankInBounds = rankInBounds(rank+1);
-            if (isRankInBounds && isEnemy(ref piece, ref checkingPiece))
+            if (isRankInBounds && isEnemyKing(ref piece, ref checkingPiece))
             {
-                if (isKing(ref checkingPiece))
-                {
-                    return true;
-                }
+                return true;
             }
             checkingPiece = getPiece(rank+1, file+1);
-            if (isRankInBounds && isEnemy(ref piece, ref checkingPiece))
+            if (isRankInBounds && isEnemyKing(ref piece, ref checkingPiece))
             {
-                if (isKing(ref checkingPiece))
-                {
-                    return true;
-                }
+                return true;
             }
             checkingPiece = getPiece(rank+1, file-1);
-            if (isRankInBounds && isEnemy(ref piece, ref checkingPiece))
+            if (isRankInBounds && isEnemyKing(ref piece, ref checkingPiece))
             {
-                if (isKing(ref checkingPiece))
-                {
-                    return true;
-                }
+                return true;
             }
             checkingPiece = getPiece(rank-1, file);
             isRankInBounds = rankInBounds(rank-1);
-            if (isRankInBounds && isEnemy(ref piece, ref checkingPiece))
+            if (isRankInBounds && isEnemyKing(ref piece, ref checkingPiece))
             {
-                if (isKing(ref checkingPiece))
-                {
-                    return true;
-                }
+                return true;
             }
             checkingPiece = getPiece(rank-1, file+1);
-            if (isRankInBounds && isEnemy(ref piece, ref checkingPiece))
+            if (isRankInBounds && isEnemyKing(ref piece, ref checkingPiece))
             {
-                if (isKing(ref checkingPiece))
-                {
-                    return true;
-                }
+                return true;
             }
             checkingPiece = getPiece(rank-1, file-1);
-            if (isRankInBounds && isEnemy(ref piece, ref checkingPiece))
+            if (isRankInBounds && isEnemyKing(ref piece, ref checkingPiece))
             {
-                if (isKing(ref checkingPiece))
-                {
-                    return true;
-                }
+                return true;
             }
             checkingPiece = getPiece(rank, file+1);
             if (isEnemyKing(ref piece, ref checkingPiece))
@@ -1887,7 +1871,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank+i, file);
             while (rankInBounds(rank+i) && isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isRook(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -1904,7 +1888,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank-i, file);
             while (rankInBounds(rank-i) && isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isRook(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -1921,7 +1905,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank, file+i);
             while (isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isRook(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -1944,7 +1928,7 @@ public class BoardBot : MonoBehaviour
             checkingPiece = getPiece(rank, file-i);
             while (isAttackable(ref piece, ref checkingPiece))
             {
-                if (isEnemy(ref piece, ref checkingPiece))
+                if (isEnemyPiece(ref piece, ref checkingPiece))
                 {
                     if (isRook(ref checkingPiece) || isQueen(ref checkingPiece))
                     {
@@ -2158,7 +2142,7 @@ public class BoardBot : MonoBehaviour
                             // file = file << 28; // it's already 0
                             break;
                         default:
-                            Debug.Log("Error : FEN Load " + strPiece);
+                            Debug.LogWarning("Error : FEN Load " + strPiece);
                             break;
                     }
                 }
@@ -2190,7 +2174,7 @@ public class BoardBot : MonoBehaviour
                     case '~':
                         break;
                     default:
-                        Debug.Log("Error : FEN Load Castle " + c);
+                        Debug.LogWarning("Error : FEN Load Castle " + c);
                         break;
                 }
             }

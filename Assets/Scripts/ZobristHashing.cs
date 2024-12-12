@@ -17,7 +17,7 @@ public class ZobristHashing
     // History of all the board states to detect repetition
     private List<ulong> boardHistory = new List<ulong>();
 
-    void Start()
+    public ZobristHashing()
     {
         // Initialize the Zobrist keys for the 20 positions on the board
         InitializeZobristKeys();
@@ -113,7 +113,7 @@ public class ZobristHashing
         {
             if (boardState[i] != 0) // If there is a piece or state (non-zero)
             {
-                hash ^= zobristKeys[i]; // XOR the position's Zobrist key
+                hash ^= boardState[i] ^ zobristKeys[i]; // XOR the position's Zobrist key
             }
         }
 

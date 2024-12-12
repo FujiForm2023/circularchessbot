@@ -32,7 +32,7 @@ public class BoardVisual : MonoBehaviour
     void Start()
     {
         boardBot = GetComponent<BoardBot>();
-        boardBot.currentPosition.CircularChessLoader("VVVVVVVV/8/8/2K2Nr1/1QR3r1/5k2/5b2/4r3/8/q1B5/6N1/BbN1n3/8/3B1Nbn/nB1b1B2/3n1Q2/b2n4/8/8/VVVVVVVV w - 0 1");
+        boardBot.currentPosition.CircularChessLoader("RP6/NP6/BP5n/QP6/KP6/BP5n/NP6/RP6/VV5n/VV5N/rp6/np6/bp5N/kp6/qp6/bp5N/np6/rp6/VV5N/VV5n w KQkq 0 1");
         DrawBoard();
 
     }
@@ -254,7 +254,7 @@ public class BoardVisual : MonoBehaviour
         float height = outerRadius * 2;
         float rankHeight = height / rankCount;
         float fileWidth = width / fileCount;
-        float minSize = Mathf.Max(rankHeight, fileWidth) * 0.75f;
+        float minSize = Mathf.Max(rankHeight, fileWidth) * 0.7f;
 
         tileObjects = new GameObject[fileCount * rankCount];
 
@@ -274,7 +274,7 @@ public class BoardVisual : MonoBehaviour
                 newObject.transform.parent = this.transform;
 
                 // Move
-                newObject.transform.position = new Vector3(minSize * i - width / 2 + minSize / 2 - 4.25f, minSize * (7-j) - height / 2 + minSize / 2 + 1.25f, 0);
+                newObject.transform.position = new Vector3(minSize * i - width / 2 + minSize / 2 - 3.75f, minSize * (7-j) - height / 2 + minSize / 2 + 1.25f, 0);
 
                 tileObjects[i * rankCount + j] = newObject;
 
@@ -335,7 +335,7 @@ public class BoardVisual : MonoBehaviour
                     piece -= 2;
                 }
                 GameObject pieceObject = Instantiate(prefabs[piece], newObject.transform);
-                pieceObject.transform.position = new Vector3(minSize * i - width / 2 + minSize / 2 - 4.25f, minSize * (7-j) - height / 2 + minSize / 2 + 1.25f, 0);
+                pieceObject.transform.position = new Vector3(minSize * i - width / 2 + minSize / 2 - 3.75f, minSize * (7-j) - height / 2 + minSize / 2 + 1.25f, 0);
                 pieceObject.transform.localScale = new Vector3(1.75f, 1.75f, 1.75f);
                 
                 // Set piece
@@ -509,5 +509,10 @@ public class BoardVisual : MonoBehaviour
         Tile tile1 = CallTile(rank1,file1).GetComponent<Tile>();
         Tile tile2 = CallTile(rank2,file2).GetComponent<Tile>();
         tile1.TileMovePieceVisual(tile2);
+    }
+
+    public void RedrawBoard(){
+        ResetChildren();
+        DrawBoard();
     }
 }
